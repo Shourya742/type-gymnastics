@@ -6,7 +6,10 @@ use std::fmt::Debug;
 
 use bitvec::vec::BitVec;
 
-use crate::array::{Array, ArrayBuilder, iterator::ArrayIterator};
+use crate::{
+    array::{Array, ArrayBuilder, iterator::ArrayIterator},
+    scalar::{Scalar, ScalarRef},
+};
 
 /// A type that is primitive, such as `i32` and `i64`.
 pub trait PrimitiveType: Copy + Send + Sync + Default + Debug + 'static {}
@@ -37,7 +40,13 @@ pub struct PrimitiveArray<T: PrimitiveType> {
     bitmap: BitVec,
 }
 
-impl<T: PrimitiveType> Array for PrimitiveArray<T> {
+impl<T> Array for PrimitiveArray<T>
+where
+    T: PrimitiveType,
+    T: Scalar<ArrayType = Self>,
+    for<'a> T: ScalarRef<'a, ScalarType = T, ArrayType = Self>,
+    for<'a> T: Scalar<RefType<'a> = T>,
+{
     type Builder = PrimitiveArrayBuilder<T>;
     type OwnedItem = T;
 
@@ -71,7 +80,13 @@ pub struct PrimitiveArrayBuilder<T: PrimitiveType> {
     bitmap: BitVec,
 }
 
-impl<T: PrimitiveType> ArrayBuilder for PrimitiveArrayBuilder<T> {
+impl<T> ArrayBuilder for PrimitiveArrayBuilder<T>
+where
+    T: PrimitiveType,
+    T: Scalar<ArrayType = PrimitiveArray<T>>,
+    for<'a> T: ScalarRef<'a, ScalarType = T, ArrayType = PrimitiveArray<T>>,
+    for<'a> T: Scalar<RefType<'a> = T>,
+{
     type Array = PrimitiveArray<T>;
 
     fn with_capacity(capacity: usize) -> Self {

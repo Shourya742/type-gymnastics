@@ -5,26 +5,32 @@
 //! an Array with an ArrayBuilder at compile time. This module also contains examples on how to use
 //! generics around the Array and ArrayBuilder.
 
-use crate::array::iterator::ArrayIterator;
+use crate::{
+    array::iterator::ArrayIterator,
+    scalar::{Scalar, ScalarRef},
+};
 
-mod iterator;
-mod primitive_array;
-mod string_array;
+pub mod iterator;
+pub mod primitive_array;
+pub mod string_array;
 
 /// [`Array`] is a collection of data of the same type
-pub trait Array: Send + Sync + Sized + 'static {
+pub trait Array: Send + Sync + Sized + 'static
+where
+    for<'a> Self::OwnedItem: Scalar<RefType<'a> = Self::RefItem<'a>>,
+{
     /// The corresponding [`ArrayBuilder`] of this [`Array`].
     ///
     /// We constraint the associated type so that `Self::Builder::Array = Self`
     type Builder: ArrayBuilder<Array = Self>;
 
     /// The owned item of the array.
-    type OwnedItem: 'static + std::fmt::Debug;
+    type OwnedItem: Scalar<ArrayType = Self>;
 
     /// Type of the item that can be retrieved from the [`Array`]. For example,
     /// we can get a `i32` from [`Int32Array`], while [`StringArray`] produces a`&str`. As we need a lifetime
     /// that is the same as `self` for `&str`, we use GAT here.
-    type RefItem<'a>: Copy + std::fmt::Debug;
+    type RefItem<'a>: ScalarRef<'a, ScalarType = Self::OwnedItem, ArrayType = Self>;
 
     /// Retrieve a reference to value.
     fn get(&self, idx: usize) -> Option<Self::RefItem<'_>>;
