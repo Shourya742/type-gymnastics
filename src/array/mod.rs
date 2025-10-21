@@ -6,7 +6,11 @@
 //! generics around the Array and ArrayBuilder.
 
 use crate::{
-    array::iterator::ArrayIterator,
+    array::{
+        iterator::ArrayIterator,
+        primitive_array::{F32Array, F32ArrayBuilder, I32Array, I32ArrayBuilder},
+        string_array::{StringArray, StringArrayBuilder},
+    },
     scalar::{Scalar, ScalarRef},
 };
 
@@ -15,7 +19,7 @@ pub mod primitive_array;
 pub mod string_array;
 
 /// [`Array`] is a collection of data of the same type
-pub trait Array: Send + Sync + Sized + 'static
+pub trait Array: Send + Sync + Sized + 'static + TryFrom<ArrayImpl> + Into<ArrayImpl>
 where
     for<'a> Self::OwnedItem: Scalar<RefType<'a> = Self::RefItem<'a>>,
 {
@@ -64,4 +68,115 @@ pub trait ArrayBuilder {
 
     /// Finish build and return a new array.
     fn finish(self) -> Self::Array;
+}
+
+/// Encapsulate all variants of array in this library.
+pub enum ArrayImpl {
+    Int32(I32Array),
+    Float32(F32Array),
+    String(StringArray),
+}
+
+impl TryFrom<ArrayImpl> for I32Array {
+    type Error = ();
+    fn try_from(value: ArrayImpl) -> Result<Self, Self::Error> {
+        match value {
+            ArrayImpl::Int32(array) => Ok(array),
+            _ => Err(()),
+        }
+    }
+}
+
+impl From<I32Array> for ArrayImpl {
+    fn from(value: I32Array) -> Self {
+        ArrayImpl::Int32(value)
+    }
+}
+
+impl TryFrom<ArrayImpl> for F32Array {
+    type Error = ();
+
+    fn try_from(array: ArrayImpl) -> Result<Self, Self::Error> {
+        match array {
+            ArrayImpl::Float32(array) => Ok(array),
+            _ => Err(()),
+        }
+    }
+}
+
+impl From<F32Array> for ArrayImpl {
+    fn from(array: F32Array) -> Self {
+        ArrayImpl::Float32(array)
+    }
+}
+
+impl TryFrom<ArrayImpl> for StringArray {
+    type Error = ();
+
+    fn try_from(array: ArrayImpl) -> Result<Self, Self::Error> {
+        match array {
+            ArrayImpl::String(array) => Ok(array),
+            _ => Err(()),
+        }
+    }
+}
+
+impl From<StringArray> for ArrayImpl {
+    fn from(array: StringArray) -> Self {
+        ArrayImpl::String(array)
+    }
+}
+
+pub enum ArrayBuilderImpl {
+    Int32(I32ArrayBuilder),
+    Float32(F32ArrayBuilder),
+    String(StringArrayBuilder),
+}
+
+impl TryFrom<ArrayBuilderImpl> for I32ArrayBuilder {
+    type Error = ();
+    fn try_from(value: ArrayBuilderImpl) -> Result<Self, Self::Error> {
+        match value {
+            ArrayBuilderImpl::Int32(v) => Ok(v),
+            _ => Err(()),
+        }
+    }
+}
+
+impl From<I32ArrayBuilder> for ArrayBuilderImpl {
+    fn from(value: I32ArrayBuilder) -> Self {
+        ArrayBuilderImpl::Int32(value)
+    }
+}
+
+impl TryFrom<ArrayBuilderImpl> for F32ArrayBuilder {
+    type Error = ();
+    fn try_from(value: ArrayBuilderImpl) -> Result<Self, Self::Error> {
+        match value {
+            ArrayBuilderImpl::Float32(v) => Ok(v),
+            _ => Err(()),
+        }
+    }
+}
+
+impl From<F32ArrayBuilder> for ArrayBuilderImpl {
+    fn from(value: F32ArrayBuilder) -> Self {
+        ArrayBuilderImpl::Float32(value)
+    }
+}
+
+impl TryFrom<ArrayBuilderImpl> for StringArrayBuilder {
+    type Error = ();
+    fn try_from(value: ArrayBuilderImpl) -> Result<Self, Self::Error> {
+        match value {
+            ArrayBuilderImpl::String(v) => Ok(v),
+            _ => Err(()),
+        }
+    }
+}
+
+impl From<StringArrayBuilder> for ArrayBuilderImpl {
+    fn from(value: StringArrayBuilder) -> Self {
+        ArrayBuilderImpl::String(value)
+    }
 }
