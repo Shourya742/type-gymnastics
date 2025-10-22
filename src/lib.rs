@@ -5,6 +5,7 @@
 //! easier.
 
 pub mod array;
+pub mod dataType;
 pub mod expr;
 pub mod macros;
 pub mod scalar;
